@@ -6,6 +6,8 @@ import com.example.kakeibo.api.dto.TransactionPostResponse;
 import com.example.kakeibo.api.dto.TransactionRequest;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,10 +35,33 @@ public class KakeiboController {
     }
 
     @PostMapping("/transaction")
-    public TransactionPostResponse createTransaction(@RequestBody TransactionRequest request,
-            @CookieValue(name = "access_token") String userIdStr) {
-        System.out.println("リクエスト" + request);
-        UUID userId = UUID.fromString(userIdStr);
-        return kakeiboService.saveTransaction(request, userId);
+    public ResponseEntity<TransactionPostResponse> createTransaction(
+            @RequestBody TransactionRequest request,
+            @CookieValue(name = "access_token", required = false) String userIdStr) {
+        System.out.println("Cookieの中身" + userIdStr);
+
+        // 1. Cookieがない場合のチェック
+        if (userIdStr == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            System.out.println("リクエスト受け取り: " + request);
+
+            // 2. 文字列からUUIDへの変換（形式が正しくないとここでエラーになるためtry-catch推奨）
+            UUID userId = UUID.fromString(userIdStr);
+            System.out.println("2. ユーザーID変換成功: " + userId);
+
+            // 3. サービスの実行
+            TransactionPostResponse response = kakeiboService.saveTransaction(request, userId);
+            System.out.println("3. サービス保存成功: " + response);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            System.err.println("エラー発生詳細: ");
+            e.printStackTrace();
+            // UUIDの形式が不正な場合
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
