@@ -29,8 +29,10 @@ public class SecurityConfig {
 
                 // 4. アクセス制限
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/transaction/**", "/kakeibo/**", "/transaction").permitAll() // /auth/login
-                                                                                                                   // や
+                        .requestMatchers("/auth/**", "/transaction/**", "/kakeibo/**", "/transaction", "/category",
+                                "/category/**")
+                        .permitAll() // /auth/login
+                        // や
                         // /auth/signup
                         // を完全に許可
                         .anyRequest().authenticated() // それ以外は認証が必要

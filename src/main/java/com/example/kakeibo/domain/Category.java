@@ -1,11 +1,17 @@
 package com.example.kakeibo.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor; // これを追加
+import lombok.Setter; // これを追加
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "categories")
+@Getter // 個別のGetter記述を削除可能
+@Setter // 個別のSetter記述を削除可能
+@NoArgsConstructor // 引数なしのpublicコンストラクタを自動生成
 public class Category {
 
     @Id
@@ -18,32 +24,29 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
-    // '0' = 収入, '1' = 支出
     @Column(nullable = false, length = 1)
     private String type;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected Category() {
+    @PrePersist
+    protected void onCreate() {
+        if (this.categoryId == null) {
+            this.categoryId = UUID.randomUUID();
+        }
+        this.createdAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
     }
 
-    public UUID getCategoryId() {
-        return categoryId;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = OffsetDateTime.now();
     }
 
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getType() {
-        return type;
-    }
+    // 明示的な protected Category() {} や Getter/Setter は
+    // Lombokアノテーションがあれば削除してOKです。
 }

@@ -3,6 +3,8 @@ package com.example.kakeibo.service;
 import com.example.kakeibo.api.dto.KakeiboResponse;
 import com.example.kakeibo.api.dto.TransactionPostResponse;
 import com.example.kakeibo.api.dto.TransactionRequest;
+import com.example.kakeibo.api.dto.CategoryRequest;
+import com.example.kakeibo.api.dto.CategoryResponse;
 import com.example.kakeibo.domain.Category;
 import com.example.kakeibo.domain.Transaction;
 import com.example.kakeibo.repository.CategoryRepository;
@@ -75,5 +77,23 @@ public class KakeiboService {
                                 saved.getCategoryId(),
                                 saved.getDate(),
                                 saved.getAmount());
+        }
+
+        @Transactional
+        public CategoryResponse addCategory(CategoryRequest request, UUID userId) {
+                // エンティティの構築
+                Category category = new Category();
+                category.setUserId(userId); // 認証情報から受け取ったIDをセット
+                category.setName(request.getCategory_name());
+                category.setType(request.getType_flg());
+
+                // 保存（PrePersistでUUID生成と日付が入る想定）
+                Category saved = categoryRepository.save(category);
+
+                // レスポンスDTOに変換
+                return new CategoryResponse(
+                                saved.getCategoryId().toString(),
+                                saved.getName(),
+                                saved.getType());
         }
 }

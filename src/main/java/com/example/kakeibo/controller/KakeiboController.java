@@ -4,6 +4,8 @@ import com.example.kakeibo.api.dto.KakeiboResponse;
 import com.example.kakeibo.service.KakeiboService;
 import com.example.kakeibo.api.dto.TransactionPostResponse;
 import com.example.kakeibo.api.dto.TransactionRequest;
+import com.example.kakeibo.api.dto.CategoryResponse;
+import com.example.kakeibo.api.dto.CategoryRequest;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -63,5 +65,19 @@ public class KakeiboController {
             // UUIDの形式が不正な場合
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/category")
+    public ResponseEntity<CategoryResponse> createCategory(
+            @RequestBody CategoryRequest request,
+            @CookieValue(name = "access_token") String token // CookieからUUID文字列を取得
+    ) {
+        // 文字列のトークン（UUID）をUUID型に変換
+        UUID userId = UUID.fromString(token);
+
+        // サービス呼び出し
+        CategoryResponse response = kakeiboService.addCategory(request, userId);
+
+        return ResponseEntity.ok(response);
     }
 }
