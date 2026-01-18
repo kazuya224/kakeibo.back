@@ -1,9 +1,13 @@
 package com.example.kakeibo.api.dto;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 public class CategoryRequest {
-    private String category_name;
-    private String type_flg;
+    @JsonProperty("category_name")
+    private String categoryName;
+
+    @JsonProperty("type_flg")
+    private String typeFlg;
 }

@@ -4,8 +4,11 @@ import com.example.kakeibo.api.dto.KakeiboResponse;
 import com.example.kakeibo.service.KakeiboService;
 import com.example.kakeibo.api.dto.TransactionPostResponse;
 import com.example.kakeibo.api.dto.TransactionRequest;
-import com.example.kakeibo.api.dto.CategoryResponse;
+import com.example.kakeibo.api.dto.CategoryAddResponse;
+import com.example.kakeibo.api.dto.CategoryAddRequest;
 import com.example.kakeibo.api.dto.CategoryRequest;
+import com.example.kakeibo.api.dto.CategoryResponse;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -18,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.web.bind.annotation.RequestParam;
 
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", // クッキー付きの通信を許可
-        allowedHeaders = "*", // すべてのヘッダーを許可
-        methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
-                RequestMethod.OPTIONS })
+// @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", // クッキー付きの通信を許可
+//         allowedHeaders = "*", // すべてのヘッダーを許可
+//         methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
+//                 RequestMethod.OPTIONS })
 @RestController
 @RequiredArgsConstructor
 public class KakeiboController {
@@ -68,16 +72,26 @@ public class KakeiboController {
     }
 
     @PostMapping("/category")
-    public ResponseEntity<CategoryResponse> createCategory(
-            @RequestBody CategoryRequest request,
+    public ResponseEntity<CategoryAddResponse> createCategory(
+            @RequestBody CategoryAddRequest request,
             @CookieValue(name = "access_token") String token // CookieからUUID文字列を取得
     ) {
         // 文字列のトークン（UUID）をUUID型に変換
         UUID userId = UUID.fromString(token);
 
         // サービス呼び出し
-        CategoryResponse response = kakeiboService.addCategory(request, userId);
+        CategoryAddResponse response = kakeiboService.addCategory(request, userId);
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/category")
+    public CategoryResponse getCategories(@CookieValue(name = "access_token") String userIdStr) {
+        // 1. Cookieから取得した文字列をUUIDに変換
+        UUID userId = UUID.fromString(userIdStr);
+
+        // 2. インスタンス変数 kakeiboService を使用し、userIdを引数に渡す
+        return kakeiboService.getCategoryList(userId);
+    }
+
 }

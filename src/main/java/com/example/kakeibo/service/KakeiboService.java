@@ -3,6 +3,8 @@ package com.example.kakeibo.service;
 import com.example.kakeibo.api.dto.KakeiboResponse;
 import com.example.kakeibo.api.dto.TransactionPostResponse;
 import com.example.kakeibo.api.dto.TransactionRequest;
+import com.example.kakeibo.api.dto.CategoryAddRequest;
+import com.example.kakeibo.api.dto.CategoryAddResponse;
 import com.example.kakeibo.api.dto.CategoryRequest;
 import com.example.kakeibo.api.dto.CategoryResponse;
 import com.example.kakeibo.domain.Category;
@@ -80,7 +82,7 @@ public class KakeiboService {
         }
 
         @Transactional
-        public CategoryResponse addCategory(CategoryRequest request, UUID userId) {
+        public CategoryAddResponse addCategory(CategoryAddRequest request, UUID userId) {
                 // エンティティの構築
                 Category category = new Category();
                 category.setUserId(userId); // 認証情報から受け取ったIDをセット
@@ -91,9 +93,26 @@ public class KakeiboService {
                 Category saved = categoryRepository.save(category);
 
                 // レスポンスDTOに変換
-                return new CategoryResponse(
+                return new CategoryAddResponse(
                                 saved.getCategoryId().toString(),
                                 saved.getName(),
                                 saved.getType());
+        }
+
+        public CategoryResponse getCategoryList(UUID userId) {
+                // 1) 既存のメソッドと同様にリポジトリからカテゴリ一覧を取得
+                List<Category> categories = categoryRepository.findByUserIdOrderByTypeAscNameAsc(userId);
+
+                // 2) ログの形式 (categoryId, name, type) に合わせて変換
+                List<CategoryResponse.CategoryInfo> categoryInfos = categories.stream()
+                                .map(c -> CategoryResponse.CategoryInfo.builder()
+                                                .categoryId(c.getCategoryId().toString()) // UUIDをStringに変換
+                                                .name(c.getName())
+                                                .type(c.getType())
+                                                .build())
+                                .toList();
+
+                // 3) フロントエンドが期待する { "categories": [...] } の形で返却
+                return new CategoryResponse(categoryInfos);
         }
 }
