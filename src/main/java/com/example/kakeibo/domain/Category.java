@@ -27,6 +27,9 @@ public class Category {
     @Column(nullable = false, length = 1)
     private String type;
 
+    @Column(name = "del_flg", nullable = false, length = 1)
+    private String delFlg;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -37,6 +40,9 @@ public class Category {
     protected void onCreate() {
         if (this.categoryId == null) {
             this.categoryId = UUID.randomUUID();
+        }
+        if (this.delFlg == null) {
+            this.delFlg = "0";
         }
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();

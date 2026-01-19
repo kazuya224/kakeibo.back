@@ -26,18 +26,14 @@ public class KakeiboService {
         private final TransactionRepository transactionRepository;
 
         public KakeiboResponse get(UUID userId) {
+                // 論理削除されていないものだけを取得
+                List<Category> categories = categoryRepository.findByUserIdAndDelFlgOrderByTypeAscNameAsc(userId, "0");
 
-                // 1) カテゴリ取得
-                List<Category> categories = categoryRepository.findByUserIdOrderByTypeAscNameAsc(userId);
-
-                // categoryId -> categoryName の辞書（transactionsに名前を付けるため）
                 Map<UUID, String> categoryNameMap = categories.stream()
                                 .collect(Collectors.toMap(Category::getCategoryId, Category::getName));
 
-                // 2) 取引取得
                 List<Transaction> transactions = transactionRepository.findByUserIdOrderByDateDesc(userId);
 
-                // 3) DTO変換
                 List<KakeiboResponse.CategoryDto> categoryDtos = categories.stream()
                                 .map(c -> new KakeiboResponse.CategoryDto(c.getCategoryId(), c.getName(), c.getType()))
                                 .toList();
@@ -83,16 +79,14 @@ public class KakeiboService {
 
         @Transactional
         public CategoryAddResponse addCategory(CategoryAddRequest request, UUID userId) {
-                // エンティティの構築
                 Category category = new Category();
-                category.setUserId(userId); // 認証情報から受け取ったIDをセット
+                category.setUserId(userId);
                 category.setName(request.getCategory_name());
                 category.setType(request.getType_flg());
+                category.setDelFlg("0"); // 明示的にセット
 
-                // 保存（PrePersistでUUID生成と日付が入る想定）
                 Category saved = categoryRepository.save(category);
 
-                // レスポンスDTOに変換
                 return new CategoryAddResponse(
                                 saved.getCategoryId().toString(),
                                 saved.getName(),
@@ -100,19 +94,57 @@ public class KakeiboService {
         }
 
         public CategoryResponse getCategoryList(UUID userId) {
-                // 1) 既存のメソッドと同様にリポジトリからカテゴリ一覧を取得
-                List<Category> categories = categoryRepository.findByUserIdOrderByTypeAscNameAsc(userId);
+                // 論理削除されていないものだけを取得
+                List<Category> categories = categoryRepository.findByUserIdAndDelFlgOrderByTypeAscNameAsc(userId, "0");
 
-                // 2) ログの形式 (categoryId, name, type) に合わせて変換
                 List<CategoryResponse.CategoryInfo> categoryInfos = categories.stream()
                                 .map(c -> CategoryResponse.CategoryInfo.builder()
-                                                .categoryId(c.getCategoryId().toString()) // UUIDをStringに変換
+                                                .categoryId(c.getCategoryId().toString())
                                                 .name(c.getName())
                                                 .type(c.getType())
                                                 .build())
                                 .toList();
 
-                // 3) フロントエンドが期待する { "categories": [...] } の形で返却
                 return new CategoryResponse(categoryInfos);
+        }
+
+        /**
+         * カテゴリ更新
+         */
+        @Transactional
+        public CategoryAddResponse updateCategory(UUID categoryId, CategoryAddRequest request, UUID userId) {
+                Category category = categoryRepository.findById(categoryId)
+                                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+                if (!category.getUserId().equals(userId)) {
+                        throw new RuntimeException("権限がありません");
+                }
+
+                category.setName(request.getCategory_name());
+                category.setType(request.getType_flg());
+
+                Category updated = categoryRepository.save(category);
+
+                return new CategoryAddResponse(
+                                updated.getCategoryId().toString(),
+                                updated.getName(),
+                                updated.getType());
+        }
+
+        /**
+         * カテゴリ削除
+         */
+        @Transactional
+        public void deleteCategory(UUID categoryId, UUID userId) {
+                Category category = categoryRepository.findById(categoryId)
+                                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+                if (!category.getUserId().equals(userId)) {
+                        throw new RuntimeException("権限がありません");
+                }
+
+                // 物理削除ではなく、フラグを "1" (削除済み) にして保存
+                category.setDelFlg("1");
+                categoryRepository.save(category);
         }
 }

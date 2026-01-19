@@ -85,6 +85,38 @@ public class KakeiboController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * カテゴリ更新
+     */
+    @PutMapping("/category/{id}")
+    public ResponseEntity<CategoryAddResponse> updateCategory(
+            @PathVariable("id") UUID categoryId,
+            @RequestBody CategoryAddRequest request, // 追加時と同じDTOを使用
+            @CookieValue(name = "access_token") String token) {
+        // トークンをUUID型に変換
+        UUID userId = UUID.fromString(token);
+
+        // サービス呼び出し（引数にカテゴリID, リクエストボディ, ユーザーIDを渡す）
+        CategoryAddResponse response = kakeiboService.updateCategory(categoryId, request, userId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * カテゴリ削除
+     */
+    @DeleteMapping("/category/{id}")
+    public ResponseEntity<Void> deleteCategory(
+            @PathVariable("id") UUID categoryId,
+            @CookieValue(name = "access_token") String token) {
+        UUID userId = UUID.fromString(token);
+
+        // サービス呼び出し
+        kakeiboService.deleteCategory(categoryId, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/category")
     public CategoryResponse getCategories(@CookieValue(name = "access_token") String userIdStr) {
         // 1. Cookieから取得した文字列をUUIDに変換
