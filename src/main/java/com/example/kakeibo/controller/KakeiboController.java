@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.Map;
 import org.springframework.web.bind.annotation.RequestParam;
 
 // @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", // クッキー付きの通信を許可
@@ -68,6 +69,46 @@ public class KakeiboController {
             e.printStackTrace();
             // UUIDの形式が不正な場合
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/transaction/{transactionId}")
+    public ResponseEntity<TransactionPostResponse> updateTransaction(
+            @PathVariable UUID transactionId,
+            @RequestBody TransactionRequest request,
+            @CookieValue(name = "access_token", required = false) String userIdStr) {
+
+        if (userIdStr == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            // サービスにtransactionIdと更新内容を渡す
+            TransactionPostResponse response = kakeiboService.updateTransaction(transactionId, request, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/transaction/{transactionId}")
+    public ResponseEntity<Map<String, String>> deleteTransaction(
+            @PathVariable UUID transactionId,
+            @CookieValue(name = "access_token", required = false) String userIdStr) {
+
+        if (userIdStr == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            kakeiboService.deleteTransaction(transactionId, userId);
+
+            // 成功時の簡易的なレスポンス
+            return ResponseEntity.ok(Map.of("response_status", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

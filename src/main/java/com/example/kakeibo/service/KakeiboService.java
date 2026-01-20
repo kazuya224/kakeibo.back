@@ -78,6 +78,36 @@ public class KakeiboService {
         }
 
         @Transactional
+        // 更新処理
+        public TransactionPostResponse updateTransaction(UUID transactionId, TransactionRequest request, UUID userId) {
+                // 1. 対象のデータが存在し、かつ自分のデータか確認
+                Transaction entity = transactionRepository.findById(transactionId)
+                                .filter(t -> t.getUserId().equals(userId))
+                                .orElseThrow(() -> new RuntimeException("権限がないか、データが存在しません"));
+
+                // 2. 内容を上書き
+                entity.setAmount(request.amount());
+                entity.setCategoryId(request.categoryId());
+                entity.setDate(request.date());
+
+                // 3. 保存
+                transactionRepository.save(entity);
+
+                return new TransactionPostResponse("success", transactionId, entity.getCategoryId(), entity.getDate(),
+                                entity.getAmount());
+        }
+
+        @Transactional
+        // 削除処理
+        public void deleteTransaction(UUID transactionId, UUID userId) {
+                // 存在チェック（自分のデータのみ）
+                if (!transactionRepository.existsByTransactionIdAndUserId(transactionId, userId)) {
+                        throw new RuntimeException("削除権限がありません");
+                }
+                transactionRepository.deleteById(transactionId);
+        }
+
+        @Transactional
         public CategoryAddResponse addCategory(CategoryAddRequest request, UUID userId) {
                 Category category = new Category();
                 category.setUserId(userId);
