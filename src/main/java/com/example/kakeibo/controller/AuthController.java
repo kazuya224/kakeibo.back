@@ -12,10 +12,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.UUID;
 
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", // クッキー付きの通信を許可
-        allowedHeaders = "*", // すべてのヘッダーを許可
-        methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
-                RequestMethod.OPTIONS })
+// @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true", // クッキー付きの通信を許可
+//         allowedHeaders = "*", // すべてのヘッダーを許可
+//         methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
+//                 RequestMethod.OPTIONS })
 
 @RestController
 @RequiredArgsConstructor
@@ -38,10 +38,10 @@ public class AuthController {
         // 2. クッキーを作成
         ResponseCookie cookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true) // JavaScriptからアクセス不可（XSS対策）
-                .secure(false) // 開発環境(http)なのでfalse。本番(https)はtrue
+                .secure(true) // 開発環境(http)なのでfalse。本番(https)はtrue
                 .path("/") // 全パスで有効
                 .maxAge(24 * 60 * 60) // 有効期限（例：1日）
-                .sameSite("Lax") // CSRF対策の基本
+                .sameSite("None") // CSRF対策の基本
                 .build();
 
         // 3. レスポンスヘッダーにセット
