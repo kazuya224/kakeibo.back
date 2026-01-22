@@ -19,24 +19,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. CORSを有効にする（下のcorsConfigurationSourceを使う）
+                // 1. CORSを最初に適用
                 .cors(Customizer.withDefaults())
 
-                // 2. CSRFを無効にする（ログイン等のPOSTを許可するために必須）
+                // 2. 本番環境（API）ではCSRFを無効化（これが403の主な原因です）
                 .csrf(csrf -> csrf.disable())
 
-                // 3. セッション管理（クッキーを使う場合はデフォルトでOK）
-
-                // 4. アクセス制限
+                // 3. アクセス制限の順序を整理
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/transaction/**", "/kakeibo/**", "/transaction", "/category",
-                                "/category/**")
-                        .permitAll() // /auth/login
-                        // や
-                        // /auth/signup
-                        // を完全に許可
-                        .anyRequest().authenticated() // それ以外は認証が必要
-                );
+                        // ログイン、新規登録、各種データ取得をすべて明示的に許可
+                        .requestMatchers("/auth/**", "/transaction/**", "/kakeibo/**", "/category/**").permitAll()
+                        .anyRequest().authenticated())
+                // 4. フォームログインなどが干渉しないように設定
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
