@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOriginPatterns(
                         "http://localhost:5173", // ローカル開発用
-                        "https://your-app-name.vercel.app" // 本番環境用（VercelのURLが決まったらここに書き換える）
+                        "https://kakeibo-front-rose.vercel.app" // 本番環境用（VercelのURLが決まったらここに書き換える）
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
