@@ -28,7 +28,9 @@ public class SecurityConfig {
                 // 3. アクセス制限の順序を整理
                 .authorizeHttpRequests(auth -> auth
                         // ログイン、新規登録、各種データ取得をすべて明示的に許可
-                        .requestMatchers("/auth/**", "/transaction/**", "/kakeibo/**", "/category/**").permitAll()
+                        .requestMatchers("/auth/**", "/transaction/**", "/transaction", "/kakeibo", "/kakeibo/**",
+                                "/category", "/category/**")
+                        .permitAll()
                         .anyRequest().authenticated())
                 // 4. フォームログインなどが干渉しないように設定
                 .formLogin(form -> form.disable())
