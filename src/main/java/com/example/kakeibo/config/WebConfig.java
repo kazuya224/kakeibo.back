@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns(
+                .allowedOrigins(
                         "http://localhost:5173", // ローカル開発用
                         "https://kakeibo-front-rose.vercel.app" // 本番環境用（VercelのURLが決まったらここに書き換える）
                 )
